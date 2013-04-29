@@ -39,8 +39,8 @@
 
 #include <stdio.h>    // Standard input/output definitions 
 #include <stdlib.h> 
-#include <stdint.h>
 #include <string.h>   // String function definitions 
+#include <unistd.h>   // for usleep()
 #include <getopt.h>
 
 #include "arduino-serial-lib.h"
@@ -56,17 +56,17 @@ void usage(void)
     "Options:\n"
     "  -h, --help                   Print this help message\n"
     "  -p, --port=serialport        Serial port Arduino is on\n"
-    "  -b, --baud=baudrate          Baudrate (bps) of Arduino\n"
+    "  -b, --baud=baudrate          Baudrate (bps) of Arduino (default 9600)\n" 
     "  -s, --send=string            Send string to Arduino\n"
     "  -S, --sendline=string        Send string with newline to Arduino\n"
     "  -r, --receive                Receive string from Arduino & print it out\n"
     "  -n  --num=num                Send a number as a single byte\n"
-    "  -F  --flush                  Flush the serial port buffers for fresh reading\n"
+    "  -F  --flush                  Flush serial port buffers for fresh reading\n"
     "  -d  --delay=millis           Delay for specified milliseconds\n"
     "  -q  --quiet                  Don't print out as much info\n"
     "\n"
-    "Note: Order is important. Set '-b' before doing '-p'. \n"
-    "      Used to make series of actions:  '-d 2000 -s hello -d 100 -r' \n"
+    "Note: Order is important. Set '-b' baudrate before opening port'-p'. \n"
+    "      Used to make series of actions: '-d 2000 -s hello -d 100 -r' \n"
     "      means 'wait 2secs, send 'hello', wait 100msec, get reply'\n"
     "\n");
     exit(EXIT_SUCCESS);
