@@ -3,7 +3,6 @@ UNAME := $(shell uname -s)
 
 ifeq "$(UNAME)" "Darwin"
 	OS=macosx
-	EXE_SUFFIX=
 endif
 ifeq "$(OS)" "Windows_NT"
 	OS=windows
@@ -20,6 +19,7 @@ EXE_SUFFIX=
 
 ARCHS=   -arch i386 -arch x86_64
 CFLAGS+= $(ARCHS)
+CFLAGS += -mmacosx-version-min=10.6
 CFLAGS_MONGOOSE=  -I./mongoose -pthread -g 
 LIBS+=	 $(ARCHS)
 
