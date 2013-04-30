@@ -14,6 +14,7 @@
 #include <string.h>   // String function definitions 
 #include <sys/ioctl.h>
 
+// uncomment this to debug reads
 //#define SERIALPORTDEBUG 
 
 // takes the string name of the serial port (e.g. "/dev/tty.usbserial","COM1")
@@ -130,7 +131,7 @@ int serialport_read_until(int fd, char* buf, char until, int buf_max, int timeou
             continue;
         }
 #ifdef SERIALPORTDEBUG  
-        printf("serialport_read_until: i=%d, n=%d %c\n",i,n,b[0]); // debug
+        printf("serialport_read_until: i=%d, n=%d b='%c'\n",i,n,b[0]); // debug
 #endif
         buf[i] = b[0]; 
         i++;
