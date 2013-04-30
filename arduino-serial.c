@@ -33,7 +33,16 @@
  *  Added patch to clean up odd baudrates from Andy at hexapodia.org
  *
  * Update 6 April 2012:
- *  Split into a library and app parts
+ *  Split into a library and app parts, put on github
+ * 
+ * Update 20 Apr 2013:
+ *  Small updates to deal with flushing and read backs
+ *  Fixed re-opens
+ *  Added --flush option
+ *  Added --sendline option
+ *  Added --eolchar option
+ *  Added --timeout option
+ *  Added -q/-quiet option
  *
  */
 
@@ -46,24 +55,24 @@
 #include "arduino-serial-lib.h"
 
 
-const int buf_max = 256;
-
 //
 void usage(void)
 {
-    printf("Usage: arduino-serial -p <serialport> [OPTIONS]\n"
+    printf("Usage: arduino-serial -b <bps> -p <serialport> [OPTIONS]\n"
     "\n"
     "Options:\n"
-    "  -h, --help                   Print this help message\n"
-    "  -p, --port=serialport        Serial port Arduino is on\n"
-    "  -b, --baud=baudrate          Baudrate (bps) of Arduino (default 9600)\n" 
-    "  -s, --send=string            Send string to Arduino\n"
-    "  -S, --sendline=string        Send string with newline to Arduino\n"
-    "  -r, --receive                Receive string from Arduino & print it out\n"
-    "  -n  --num=num                Send a number as a single byte\n"
-    "  -F  --flush                  Flush serial port buffers for fresh reading\n"
-    "  -d  --delay=millis           Delay for specified milliseconds\n"
-    "  -q  --quiet                  Don't print out as much info\n"
+    "  -h, --help                 Print this help message\n"
+    "  -b, --baud=baudrate        Baudrate (bps) of Arduino (default 9600)\n" 
+    "  -p, --port=serialport      Serial port Arduino is connected to\n"
+    "  -s, --send=string          Send string to Arduino\n"
+    "  -S, --sendline=string      Send string with newline to Arduino\n"
+    "  -r, --receive              Receive string from Arduino & print it out\n"
+    "  -n  --num=num              Send a number as a single byte\n"
+    "  -F  --flush                Flush serial port buffers for fresh reading\n"
+    "  -d  --delay=millis         Delay for specified milliseconds\n"
+    "  -e  --eolchar=char         Specify EOL char for reads (default '\\n')\n"
+    "  -t  --timeout=millis       Timeout for reads in millisecs (default 5000)\n"
+    "  -q  --quiet                Don't print out as much info\n"
     "\n"
     "Note: Order is important. Set '-b' baudrate before opening port'-p'. \n"
     "      Used to make series of actions: '-d 2000 -s hello -d 100 -r' \n"
@@ -81,12 +90,16 @@ void error(char* msg)
 
 int main(int argc, char *argv[]) 
 {
+    const int buf_max = 256;
+
     int fd = -1;
     char serialport[buf_max];
     int baudrate = 9600;  // default
+    char quiet=0;
+    char eolchar = '\n';
+    int timeout = 5000;
     char buf[buf_max];
     int rc,n;
-    char quiet=0;
 
     if (argc==1) {
         usage();
@@ -104,18 +117,28 @@ int main(int argc, char *argv[])
         {"flush",      no_argument,       0, 'F'},
         {"num",        required_argument, 0, 'n'},
         {"delay",      required_argument, 0, 'd'},
+        {"eolchar",    required_argument, 0, 'e'},
+        {"timeout",    required_argument, 0, 't'},
         {"quiet",      no_argument,       0, 'q'},
         {NULL,         0,                 0, 0}
     };
     
     while(1) {
-        opt = getopt_long (argc, argv, "hp:b:s:S:rFn:d:q",
+        opt = getopt_long (argc, argv, "hp:b:s:S:rFn:d:qe:t:",
                            loptions, &option_index);
         if (opt==-1) break;
         switch (opt) {
         case '0': break;
         case 'q':
             quiet = 1;
+            break;
+        case 'e':
+            eolchar = optarg[0];
+            if(!quiet) printf("eolchar set to '%c'\n",eolchar);
+            break;
+        case 't':
+            timeout = strtol(optarg,NULL,10);
+            if( !quiet ) printf("timeout set to %d millisecs\n",timeout);
             break;
         case 'd':
             n = strtol(optarg,NULL,10);
@@ -129,9 +152,14 @@ int main(int argc, char *argv[])
             baudrate = strtol(optarg,NULL,10);
             break;
         case 'p':
+            if( fd!=-1 ) {
+                serialport_close(fd);
+                if(!quiet) printf("closed port %s\n",serialport);
+            }
             strcpy(serialport,optarg);
             fd = serialport_init(optarg, baudrate);
             if( fd==-1 ) error("couldn't open port");
+            if(!quiet) printf("opened port %s\n",serialport);
             serialport_flush(fd);
             break;
         case 'n':
@@ -152,12 +180,13 @@ int main(int argc, char *argv[])
         case 'r':
             if( fd == -1 ) error("serial port not opened");
             memset(buf,0,buf_max);  // 
-            serialport_read_until(fd, buf, '\n', buf_max);
+            serialport_read_until(fd, buf, eolchar, buf_max, timeout);
             if( !quiet ) printf("read string:");
             printf("%s\n", buf);
             break;
         case 'F':
             if( fd == -1 ) error("serial port not opened");
+            if( !quiet ) printf("flushing receive buffer\n");
             serialport_flush(fd);
             break;
 
