@@ -20,7 +20,7 @@
  *
  * 
  * Updated 8 December 2006: 
- *  Justin McBride discoevered B14400 & B28800 aren't in Linux's termios.h.
+ *  Justin McBride discovered B14400 & B28800 aren't in Linux's termios.h.
  *  I've included his patch, but commented out for now.  One really needs a
  *  real make system when doing cross-platform C and I wanted to avoid that
  *  for this little program. Those baudrates aren't used much anyway. :)
