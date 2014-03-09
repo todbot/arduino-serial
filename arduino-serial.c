@@ -15,8 +15,7 @@
  *
  *
  * Originally created 5 December 2006
- * Copyleft (c) 2006, Tod E. Kurt, tod@todbot.com
- * http://todbot.com/blog/
+ * 2006-2013, Tod E. Kurt, http://todbot.com/blog/
  *
  * 
  * Updated 8 December 2006: 
