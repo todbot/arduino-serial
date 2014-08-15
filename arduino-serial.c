@@ -1,9 +1,9 @@
 /*
  * arduino-serial
  * --------------
- * 
+ *
  * A simple command-line example program showing how a computer can
- * communicate with an Arduino board. Works on any POSIX system (Mac/Unix/PC) 
+ * communicate with an Arduino board. Works on any POSIX system (Mac/Unix/PC)
  *
  *
  * Compile with something like:
@@ -17,8 +17,8 @@
  * Originally created 5 December 2006
  * 2006-2013, Tod E. Kurt, http://todbot.com/blog/
  *
- * 
- * Updated 8 December 2006: 
+ *
+ * Updated 8 December 2006:
  *  Justin McBride discovered B14400 & B28800 aren't in Linux's termios.h.
  *  I've included his patch, but commented out for now.  One really needs a
  *  real make system when doing cross-platform C and I wanted to avoid that
@@ -33,7 +33,7 @@
  *
  * Update 6 April 2012:
  *  Split into a library and app parts, put on github
- * 
+ *
  * Update 20 Apr 2013:
  *  Small updates to deal with flushing and read backs
  *  Fixed re-opens
@@ -45,9 +45,9 @@
  *
  */
 
-#include <stdio.h>    // Standard input/output definitions 
-#include <stdlib.h> 
-#include <string.h>   // String function definitions 
+#include <stdio.h>    // Standard input/output definitions
+#include <stdlib.h>
+#include <string.h>   // String function definitions
 #include <unistd.h>   // for usleep()
 #include <getopt.h>
 
@@ -61,10 +61,11 @@ void usage(void)
     "\n"
     "Options:\n"
     "  -h, --help                 Print this help message\n"
-    "  -b, --baud=baudrate        Baudrate (bps) of Arduino (default 9600)\n" 
+    "  -b, --baud=baudrate        Baudrate (bps) of Arduino (default 9600)\n"
     "  -p, --port=serialport      Serial port Arduino is connected to\n"
     "  -s, --send=string          Send string to Arduino\n"
     "  -S, --sendline=string      Send string with newline to Arduino\n"
+    "  -i  --stdinput             Use standard input\n"
     "  -r, --receive              Receive string from Arduino & print it out\n"
     "  -n  --num=num              Send a number as a single byte\n"
     "  -F  --flush                Flush serial port buffers for fresh reading\n"
@@ -87,7 +88,7 @@ void error(char* msg)
     exit(EXIT_FAILURE);
 }
 
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
     const int buf_max = 256;
 
@@ -112,6 +113,7 @@ int main(int argc, char *argv[])
         {"baud",       required_argument, 0, 'b'},
         {"send",       required_argument, 0, 's'},
         {"sendline",   required_argument, 0, 'S'},
+        {"stdinput",   no_argument,       0, 'i'},
         {"receive",    no_argument,       0, 'r'},
         {"flush",      no_argument,       0, 'F'},
         {"num",        required_argument, 0, 'n'},
@@ -121,9 +123,9 @@ int main(int argc, char *argv[])
         {"quiet",      no_argument,       0, 'q'},
         {NULL,         0,                 0, 0}
     };
-    
+
     while(1) {
-        opt = getopt_long (argc, argv, "hp:b:s:S:rFn:d:qe:t:",
+        opt = getopt_long (argc, argv, "hp:b:s:S:i:rFn:d:qe:t:",
                            loptions, &option_index);
         if (opt==-1) break;
         switch (opt) {
@@ -176,9 +178,18 @@ int main(int argc, char *argv[])
             rc = serialport_write(fd, buf);
             if(rc==-1) error("error writing");
             break;
+        case 'i':
+            rc=-1;
+            if( fd == -1) error("serial port not opened");
+            while(fgets(buf, buf_max, stdin)) {
+                if( !quiet ) printf("send string:%s\n", buf);
+                rc = serialport_write(fd, buf);
+            }
+            if(rc==-1) error("error writing");
+            break;
         case 'r':
             if( fd == -1 ) error("serial port not opened");
-            memset(buf,0,buf_max);  // 
+            memset(buf,0,buf_max);  //
             serialport_read_until(fd, buf, eolchar, buf_max, timeout);
             if( !quiet ) printf("read string:");
             printf("%s\n", buf);
@@ -192,6 +203,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    exit(EXIT_SUCCESS);    
+    exit(EXIT_SUCCESS);
 } // end main
-    
+
