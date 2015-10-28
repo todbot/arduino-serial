@@ -128,6 +128,7 @@ int serialport_read_until(int fd, char* buf, char until, int buf_max, int timeou
         if( n==0 ) {
             usleep( 1 * 1000 );  // wait 1 msec try again
             timeout--;
+            if( timeout==0 ) return -2;
             continue;
         }
 #ifdef SERIALPORTDEBUG  
