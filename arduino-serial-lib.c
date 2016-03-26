@@ -71,7 +71,7 @@ int serialport_init(const char* serialport, int baud)
     //toptions.c_cflag &= ~HUPCL; // disable hang-up-on-close to avoid reset
 
     toptions.c_cflag |= CREAD | CLOCAL;  // turn on READ & ignore ctrl lines
-    toptions.c_iflag &= ~(IXON | IXOFF | IXANY); // turn off s/w flow ctrl
+    toptions.c_iflag &= ~(IXON | IXOFF | IXANY | INLCR | ICRNL); // turn off s/w flow ctrl
 
     toptions.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // make raw
     toptions.c_oflag &= ~OPOST; // make raw
@@ -120,10 +120,10 @@ int serialport_write(int fd, const char* str)
 //
 int serialport_read_until(int fd, char* buf, char until, int buf_max, int timeout)
 {
-    char b[1];  // read expects an array, so we give it a 1-byte array
+    char b;
     int i=0;
     do { 
-        int n = read(fd, b, 1);  // read a char at a time
+        int n = read(fd, &b, 1);  // read a char at a time
         if( n==-1) return -1;    // couldn't read
         if( n==0 ) {
             usleep( 1 * 1000 );  // wait 1 msec try again
@@ -132,11 +132,11 @@ int serialport_read_until(int fd, char* buf, char until, int buf_max, int timeou
             continue;
         }
 #ifdef SERIALPORTDEBUG  
-        printf("serialport_read_until: i=%d, n=%d b='%c'\n",i,n,b[0]); // debug
+        printf("serialport_read_until: i=%d, n=%d b='%c'\n",i,n,b); // debug
 #endif
-        buf[i] = b[0]; 
+        buf[i] = b; 
         i++;
-    } while( b[0] != until && i < buf_max && timeout>0 );
+    } while( b != until && i+1 < buf_max && timeout>0 );
 
     buf[i] = 0;  // null terminate the string
     return 0;
