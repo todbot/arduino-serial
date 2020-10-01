@@ -1,4 +1,7 @@
-arduino-serial -- C code to talk to Arduino
+arduino-serial --
+c language-
+
+C code to talk to Arduino
 ===========================================
 
 Original URL: http://todbot.com/blog/2006/12/06/arduino-serial-c-code-to-talk-to-arduino/
